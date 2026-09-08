@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="All books by Arvis — browse titles and order your copies.">
+  <title>Books | Arvis the Author</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="index.html" class="brand">Arvis <span>the Author</span></a>
+      <button class="nav-toggle" aria-label="Toggle navigation" aria-expanded="false">&#9776;</button>
+      <nav class="site-nav" aria-label="Main navigation">
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="books.html" class="active">Books</a></li>
+          <li><a href="about.html">About</a></li>
+          <li><a href="contact.html">Contact</a></li>
+          <li><a href="#" class="btn btn-store store-link" target="_blank" rel="noopener">Buy Now</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="page-hero">
+      <div class="container">
+        <h1>The Books</h1>
+        <p class="lead">Every title, in one place. Each card links straight to the store.</p>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <div class="card-grid">
+          <!-- Duplicate this card per title. Point the Buy button at the exact
+               store product page once the Yahoo store URLs are confirmed. -->
+          <article class="book-card">
+            <div class="cover-placeholder small" aria-hidden="true">Cover</div>
+            <h3>Book Title One</h3>
+            <p class="meta">Genre &middot; Year</p>
+            <p>Longer description of the book — a paragraph of back-cover copy can go here.</p>
+            <a href="#" class="btn btn-primary store-link" target="_blank" rel="noopener">Buy Now</a>
+          </article>
+          <article class="book-card">
+            <div class="cover-placeholder small" aria-hidden="true">Cover</div>
+            <h3>Book Title Two</h3>
+            <p class="meta">Genre &middot; Year</p>
+            <p>Longer description of the book — a paragraph of back-cover copy can go here.</p>
+            <a href="#" class="btn btn-primary store-link" target="_blank" rel="noopener">Buy Now</a>
+          </article>
+          <article class="book-card">
+            <div class="cover-placeholder small" aria-hidden="true">Cover</div>
+            <h3>Book Title Three</h3>
+            <p class="meta">Genre &middot; Year</p>
+            <p>Longer description of the book — a paragraph of back-cover copy can go here.</p>
+            <a href="#" class="btn btn-primary store-link" target="_blank" rel="noopener">Buy Now</a>
+          </article>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <p>&copy; <span id="year"></span> Arvis the Author. All rights reserved.</p>
+      <nav aria-label="Footer navigation">
+        <a href="index.html">Home</a>
+        <a href="books.html">Books</a>
+        <a href="about.html">About</a>
+        <a href="contact.html">Contact</a>
+        <a href="#" class="store-link" target="_blank" rel="noopener">Store</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+</body>
+</html>
