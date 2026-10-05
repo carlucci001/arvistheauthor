@@ -3,3 +3,6 @@
 .vercel/
 node_modules/
 
+
+# Unpublished client book files - never push (site auto-deploys from this repo)
+book-projects/
