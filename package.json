@@ -1,0 +1,8 @@
+{
+  "name": "arvistheauthor",
+  "private": true,
+  "description": "Static site for arvistheauthor.com. The only code is api/record-upload.js (voice recording upload for /record).",
+  "dependencies": {
+    "@vercel/blob": "^2.0.0"
+  }
+}

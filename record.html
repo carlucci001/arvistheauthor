@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Record your voice — Arvis Boughman</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#16130f">
+<style>
+  /* Self-contained page: needs only /api/record-upload, two font files and the avatar image. */
+  @font-face { font-family: 'Cormorant Garamond'; font-style: normal; font-weight: 400 700; font-display: swap; src: url("/assets/fonts/f-5a0fdd6f9a.woff2") format('woff2'); }
+  @font-face { font-family: 'Jost'; font-style: normal; font-weight: 300 600; font-display: swap; src: url("/assets/fonts/f-ea84205dca.woff2") format('woff2'); }
+  :root { --bg: #16130f; --panel: #1d1914; --ink: #efe8db; --muted: #cfc4ae; --dim: #8c8270; --accent: #c9a25a; --accent-deep: #a37f3b; --line: rgba(201,162,90,.22); --red: #d9634c; }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body { background: radial-gradient(900px 460px at 50% -10%, #2a2318 0%, var(--bg) 65%) no-repeat var(--bg); color: var(--ink); font-family: Jost, system-ui, sans-serif; font-size: 18px; line-height: 1.55; -webkit-text-size-adjust: 100%; }
+  .wrap { min-height: 100%; display: flex; flex-direction: column; align-items: center; padding: 22px 20px 28px; }
+  .brand { display: flex; align-items: center; gap: 12px; margin-bottom: clamp(14px, 3vh, 30px); }
+  .brand .ring { width: 44px; height: 44px; border-radius: 50%; padding: 2px; border: 1px solid var(--accent); flex: 0 0 auto; }
+  .brand img { display: block; width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+  .brand .n { font-family: 'Cormorant Garamond', serif; font-size: 21px; letter-spacing: .18em; text-transform: uppercase; line-height: 1; }
+  .brand .t { font-size: 9px; letter-spacing: .34em; text-transform: uppercase; color: var(--accent); margin-top: 6px; }
+  main { width: 100%; max-width: 560px; flex: 1; display: flex; flex-direction: column; justify-content: center; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: clamp(22px, 4.5vw, 38px); text-align: center; }
+  .dots { display: flex; justify-content: center; gap: 10px; margin-bottom: 16px; }
+  .dots i { width: 34px; height: 3px; border-radius: 2px; background: rgba(201,162,90,.22); }
+  .dots i.on { background: var(--accent); }
+  .eyebrow { font-size: 12px; letter-spacing: .32em; text-transform: uppercase; color: var(--accent); margin-bottom: 8px; }
+  h1 { font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: clamp(32px, 6.4vw, 44px); line-height: 1.05; margin: 0 0 12px; text-wrap: balance; }
+  p { margin: 0 0 14px; color: var(--muted); font-weight: 300; text-wrap: pretty; }
+  p strong { color: var(--ink); font-weight: 500; }
+  .step { display: none; }
+  .step.on { display: block; }
+  label.field { display: block; text-align: left; font-size: 13px; letter-spacing: .18em; text-transform: uppercase; color: var(--accent); margin: 18px 0 8px; }
+  input[type=text] { width: 100%; font: inherit; font-size: 20px; color: var(--ink); background: #120f0c; border: 1px solid rgba(201,162,90,.4); border-radius: 4px; padding: 14px 16px; }
+  input[type=text]:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .consent { display: flex; gap: 14px; align-items: flex-start; text-align: left; margin: 18px 0 6px; padding: 14px 16px; border: 1px solid var(--line); border-radius: 4px; cursor: pointer; color: var(--ink); font-size: 17px; line-height: 1.45; }
+  .consent input { flex: 0 0 auto; width: 26px; height: 26px; margin: 2px 0 0; accent-color: var(--accent); }
+  button { font: inherit; cursor: pointer; border-radius: 4px; }
+  .btn { display: block; width: 100%; min-height: 60px; margin-top: 16px; padding: 14px 20px; border: 1px solid var(--accent); background: var(--accent); color: #16130f; font-size: 17px; font-weight: 500; letter-spacing: .16em; text-transform: uppercase; }
+  .btn:hover { background: #d6b272; }
+  .btn.ghost { background: transparent; color: var(--accent); }
+  .btn.ghost:hover { background: rgba(201,162,90,.1); }
+  .btn.stop { background: var(--red); border-color: var(--red); color: #fff; }
+  .btn[disabled] { opacity: .45; cursor: default; }
+  .tips { list-style: none; margin: 4px 0 6px; padding: 0; text-align: left; }
+  .tips li { position: relative; padding: 5px 0 5px 26px; color: var(--muted); font-weight: 300; }
+  .tips li::before { content: ''; position: absolute; left: 4px; top: 16px; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+  .clock { font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: clamp(64px, 16vw, 92px); line-height: 1; margin: 6px 0 2px; font-variant-numeric: tabular-nums; }
+  .of { color: var(--dim); font-size: 15px; letter-spacing: .14em; text-transform: uppercase; margin-bottom: 14px; }
+  .bar { height: 8px; border-radius: 4px; background: rgba(201,162,90,.16); overflow: hidden; }
+  .bar > span { display: block; height: 100%; width: 0; background: var(--accent); transition: width .5s linear; }
+  .meter { display: flex; align-items: center; gap: 10px; margin: 14px 0 2px; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: var(--dim); }
+  .meter .lv { flex: 1; height: 8px; border-radius: 4px; background: rgba(239,232,219,.1); overflow: hidden; }
+  .meter .lv > span { display: block; height: 100%; width: 0; background: #7fb37a; transition: width .08s linear; }
+  .rec { display: inline-flex; align-items: center; gap: 10px; font-size: 13px; letter-spacing: .26em; text-transform: uppercase; color: var(--red); margin-bottom: 4px; }
+  .rec::before { content: ''; width: 12px; height: 12px; border-radius: 50%; background: var(--red); animation: pulse 1.2s ease-in-out infinite; }
+  @keyframes pulse { 50% { opacity: .25; } }
+  audio { width: 100%; margin: 8px 0 4px; }
+  .note { font-size: 16px; color: var(--muted); min-height: 1.4em; }
+  .warn { margin: 12px 0 0; padding: 12px 14px; border: 1px solid rgba(217,99,76,.55); border-radius: 4px; color: #f0c7bd; font-size: 16px; text-align: left; display: none; }
+  .warn.on { display: block; }
+  .warn a { color: var(--accent); }
+  .check { width: 76px; height: 76px; border-radius: 50%; border: 2px solid var(--accent); margin: 2px auto 16px; display: grid; place-items: center; color: var(--accent); font-size: 40px; line-height: 1; }
+  .foot { margin-top: 18px; font-size: 13px; color: #5c5546; text-align: center; }
+  @media (max-height: 640px) { .brand { margin-bottom: 10px; } .clock { font-size: 56px; } }
+  @media (prefers-reduced-motion: reduce) { .rec::before { animation: none; } .bar > span, .meter .lv > span { transition: none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">
+    <span class="ring"><img src="/assets/img/arvis-boughman-avatar.jpg" alt="" width="38" height="38"></span>
+    <span><div class="n">Arvis Boughman</div><div class="t">Lumbee Storyteller</div></span>
+  </div>
+
+  <main>
+    <div class="card">
+      <div class="dots" aria-hidden="true"><i id="d1" class="on"></i><i id="d2"></i><i id="d3"></i></div>
+
+      <!-- Step 1: name + permission -->
+      <section class="step on" id="s-start">
+        <div class="eyebrow">Audiobook</div>
+        <h1>Record your voice</h1>
+        <p>We need about <strong>3 minutes</strong> of you reading aloud. Your recording teaches the computer your voice so it can read the audiobook.</p>
+        <label class="field" for="name">Your name</label>
+        <input type="text" id="name" autocomplete="name" maxlength="120" placeholder="First and last name">
+        <label class="consent"><input type="checkbox" id="consent"><span id="consent-text">I give Arvis Boughman and Farrington Development permission to use this recording of my voice to create the narration voice for his audiobooks.</span></label>
+        <div class="warn" id="w-start" role="alert"></div>
+        <button class="btn" id="b-continue" type="button">Continue</button>
+      </section>
+
+      <!-- Step 2a: get ready -->
+      <section class="step" id="s-ready">
+        <div class="eyebrow">Get ready</div>
+        <h1>Before you press record</h1>
+        <ul class="tips">
+          <li>Go to a <strong>quiet room</strong>. No music or TV, and nobody else talking.</li>
+          <li>Have the <strong>book</strong> open in front of you.</li>
+          <li>Read aloud the way you would <strong>read to a class</strong>, for about 3 minutes.</li>
+          <li>When your device asks to use the microphone, choose <strong>Allow</strong>.</li>
+        </ul>
+        <div class="warn" id="w-ready" role="alert"></div>
+        <button class="btn" id="b-record" type="button">Start recording</button>
+      </section>
+
+      <!-- Step 2b: recording -->
+      <section class="step" id="s-rec">
+        <div class="rec">Recording</div>
+        <div class="clock" id="clock" aria-live="off">0:00</div>
+        <div class="of">of 3:00</div>
+        <div class="bar"><span id="prog"></span></div>
+        <div class="meter"><span>Your voice</span><div class="lv"><span id="level"></span></div></div>
+        <p class="note" id="rec-note" aria-live="polite">Keep reading until the clock reaches 3:00.</p>
+        <button class="btn stop" id="b-stop" type="button">Stop</button>
+      </section>
+
+      <!-- Step 3: listen + send -->
+      <section class="step" id="s-review">
+        <div class="eyebrow">Almost done</div>
+        <h1>Listen, then send</h1>
+        <p id="review-note">Press play to hear your recording.</p>
+        <audio id="player" controls preload="metadata"></audio>
+        <div class="warn" id="w-review" role="alert"></div>
+        <button class="btn" id="b-send" type="button">Send my recording</button>
+        <button class="btn ghost" id="b-again" type="button">Record again</button>
+      </section>
+
+      <!-- sending -->
+      <section class="step" id="s-sending">
+        <div class="eyebrow">Sending</div>
+        <h1>Sending your recording</h1>
+        <p>Please keep this page open.</p>
+        <div class="bar"><span id="up"></span></div>
+        <p class="note" id="up-note" aria-live="polite">Starting…</p>
+      </section>
+
+      <!-- done -->
+      <section class="step" id="s-done">
+        <div class="check" aria-hidden="true">✓</div>
+        <h1>Thank you</h1>
+        <p>Your recording was sent. You can close this page now.</p>
+      </section>
+    </div>
+    <div class="foot">Private page · arvistheauthor.com</div>
+  </main>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  var TARGET = 180, MAX = 300, MIN = 20, CHUNK = 2 * 1024 * 1024;
+  var API = '/api/record-upload';
+  var $ = function (id) { return document.getElementById(id); };
+  var stream = null, recorder = null, chunks = [], blob = null, objUrl = null;
+  var startedAt = 0, tick = null, durationSec = 0, audioCtx = null, raf = 0, wakeLock = null, sending = false;
+
+  function show(step) {
+    ['s-start', 's-ready', 's-rec', 's-review', 's-sending', 's-done'].forEach(function (s) { $(s).classList.toggle('on', s === step); });
+    var n = step === 's-start' ? 1 : (step === 's-ready' || step === 's-rec') ? 2 : 3;
+    $('d1').classList.toggle('on', n >= 1); $('d2').classList.toggle('on', n >= 2); $('d3').classList.toggle('on', n >= 3);
+    window.scrollTo(0, 0);
+  }
+  function warn(id, html) { var el = $(id); el.innerHTML = html || ''; el.classList.toggle('on', !!html); }
+  function fmt(s) { s = Math.max(0, Math.floor(s)); return Math.floor(s / 60) + ':' + ('0' + (s % 60)).slice(-2); }
+  function uuid() {
+    if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+    var b = new Uint8Array(16); (window.crypto || window.msCrypto).getRandomValues(b);
+    b[6] = (b[6] & 0x0f) | 0x40; b[8] = (b[8] & 0x3f) | 0x80;
+    var h = Array.prototype.map.call(b, function (x) { return ('0' + x.toString(16)).slice(-2); }).join('');
+    return h.slice(0, 8) + '-' + h.slice(8, 12) + '-' + h.slice(12, 16) + '-' + h.slice(16, 20) + '-' + h.slice(20);
+  }
+
+  // ---- step 1 ----
+  $('b-continue').addEventListener('click', function () {
+    var name = $('name').value.trim();
+    if (!name) { warn('w-start', 'Please type your name.'); $('name').focus(); return; }
+    if (!$('consent').checked) { warn('w-start', 'Please tick the box to give your permission.'); return; }
+    warn('w-start', '');
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.MediaRecorder) {
+      warn('w-start', 'This browser cannot record sound. Please open this page in <strong>Safari</strong> (iPhone or iPad) or <strong>Chrome</strong> (Android or a computer): <br><strong>' + location.host + location.pathname + '</strong>');
+      return;
+    }
+    show('s-ready');
+  });
+
+  // ---- step 2: record ----
+  $('b-record').addEventListener('click', startRecording);
+  $('b-stop').addEventListener('click', stopRecording);
+
+  function startRecording() {
+    warn('w-ready', '');
+    $('b-record').disabled = true;
+    navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: true, autoGainControl: true } })
+      .then(function (s) {
+        stream = s;
+        var types = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg;codecs=opus'];
+        var mime = '';
+        for (var i = 0; i < types.length; i++) { if (MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(types[i])) { mime = types[i]; break; } }
+        var opts = { audioBitsPerSecond: 128000 };
+        if (mime) opts.mimeType = mime;
+        try { recorder = new MediaRecorder(stream, opts); } catch (e) { recorder = new MediaRecorder(stream); }
+        chunks = [];
+        recorder.ondataavailable = function (e) { if (e.data && e.data.size) chunks.push(e.data); };
+        recorder.onstop = onStopped;
+        recorder.onerror = function () { cleanupStream(); $('b-record').disabled = false; show('s-ready'); warn('w-ready', 'The recording stopped unexpectedly. Please try again.'); };
+        recorder.start(1000);
+        startedAt = Date.now();
+        $('clock').textContent = '0:00'; $('prog').style.width = '0%';
+        $('rec-note').textContent = 'Keep reading until the clock reaches 3:00.';
+        show('s-rec');
+        tick = setInterval(onTick, 250);
+        startMeter();
+        if (navigator.wakeLock && navigator.wakeLock.request) { navigator.wakeLock.request('screen').then(function (w) { wakeLock = w; }).catch(function () {}); }
+      })
+      .catch(function (err) {
+        $('b-record').disabled = false;
+        var n = err && err.name;
+        if (n === 'NotAllowedError' || n === 'SecurityError' || n === 'PermissionDeniedError') {
+          warn('w-ready', 'The microphone was blocked. Press <strong>Start recording</strong> again and choose <strong>Allow</strong> when asked. If you are not asked, reload this page and try once more.');
+        } else if (n === 'NotFoundError' || n === 'DevicesNotFoundError') {
+          warn('w-ready', 'No microphone was found on this device. Please try on a phone, or a computer that has a microphone.');
+        } else {
+          warn('w-ready', 'The microphone could not be started. Close other apps that may be using it and try again.');
+        }
+      });
+  }
+
+  function onTick() {
+    var s = (Date.now() - startedAt) / 1000;
+    $('clock').textContent = fmt(s);
+    $('prog').style.width = Math.min(100, (s / TARGET) * 100) + '%';
+    if (s >= TARGET) $('rec-note').innerHTML = '<strong>That is enough.</strong> Finish your sentence and press Stop.';
+    if (s >= MAX) stopRecording();
+  }
+
+  function startMeter() {
+    try {
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return;
+      audioCtx = new AC();
+      var src = audioCtx.createMediaStreamSource(stream);
+      var an = audioCtx.createAnalyser(); an.fftSize = 512;
+      src.connect(an);
+      var data = new Uint8Array(an.fftSize);
+      (function loop() {
+        an.getByteTimeDomainData(data);
+        var peak = 0;
+        for (var i = 0; i < data.length; i++) { var v = Math.abs(data[i] - 128); if (v > peak) peak = v; }
+        $('level').style.width = Math.min(100, (peak / 128) * 220) + '%';
+        raf = requestAnimationFrame(loop);
+      })();
+    } catch (e) { /* the meter is optional */ }
+  }
+
+  function stopRecording() {
+    if (!recorder || recorder.state === 'inactive') return;
+    durationSec = Math.round((Date.now() - startedAt) / 1000);
+    clearInterval(tick); tick = null;
+    try { recorder.stop(); } catch (e) {}
+  }
+
+  function cleanupStream() {
+    clearInterval(tick); tick = null;
+    cancelAnimationFrame(raf);
+    if (audioCtx) { try { audioCtx.close(); } catch (e) {} audioCtx = null; }
+    if (stream) { stream.getTracks().forEach(function (t) { t.stop(); }); stream = null; }
+    if (wakeLock) { try { wakeLock.release(); } catch (e) {} wakeLock = null; }
+  }
+
+  function onStopped() {
+    var type = (recorder && recorder.mimeType) || (chunks[0] && chunks[0].type) || 'audio/webm';
+    blob = new Blob(chunks, { type: type });
+    cleanupStream();
+    $('b-record').disabled = false;
+    if (objUrl) URL.revokeObjectURL(objUrl);
+    objUrl = URL.createObjectURL(blob);
+    $('player').src = objUrl;
+    warn('w-review', '');
+    $('b-send').disabled = false;
+    if (!blob.size || durationSec < MIN) {
+      $('review-note').textContent = 'That recording was too short to use.';
+      warn('w-review', 'Your recording was only ' + fmt(durationSec) + ' long. Please press <strong>Record again</strong> and read for about 3 minutes.');
+      $('b-send').disabled = true;
+    } else if (durationSec < 120) {
+      $('review-note').textContent = 'Press play to hear your recording.';
+      warn('w-review', 'Your recording is ' + fmt(durationSec) + ' long. A recording of about 3 minutes works much better. You can send this one, but it is best to <strong>record again</strong> and read a little longer.');
+    } else {
+      $('review-note').textContent = 'Press play to hear your recording (' + fmt(durationSec) + '). If it sounds clear, send it.';
+    }
+    show('s-review');
+  }
+
+  $('b-again').addEventListener('click', function () {
+    try { $('player').pause(); } catch (e) {}
+    warn('w-ready', '');
+    show('s-ready');
+  });
+
+  // ---- step 3: send ----
+  function post(url, body, type, tries) {
+    tries = tries || 0;
+    return fetch(url, { method: 'POST', headers: { 'Content-Type': type }, body: body })
+      .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(function (j) { if (!j || !j.ok) throw new Error('not ok'); return j; })
+      .catch(function (err) {
+        if (tries >= 3) throw err;
+        return new Promise(function (res) { setTimeout(res, 1500 * (tries + 1)); }).then(function () { return post(url, body, type, tries + 1); });
+      });
+  }
+
+  $('b-send').addEventListener('click', function () {
+    if (sending || !blob) return;
+    sending = true;
+    try { $('player').pause(); } catch (e) {}
+    warn('w-review', '');
+    $('up').style.width = '3%'; $('up-note').textContent = 'Starting…';
+    show('s-sending');
+    var id = uuid();
+    var parts = Math.max(1, Math.ceil(blob.size / CHUNK));
+    var i = 0;
+    function next() {
+      if (i >= parts) {
+        $('up-note').textContent = 'Finishing…';
+        return post(API + '?id=' + id + '&done=1', JSON.stringify({
+          name: $('name').value.trim(), consent: $('consent').checked === true, consentText: $('consent-text').textContent.trim(),
+          mime: blob.type, bytes: blob.size, parts: parts, durationSec: durationSec
+        }), 'application/json');
+      }
+      var piece = blob.slice(i * CHUNK, (i + 1) * CHUNK);
+      return post(API + '?id=' + id + '&part=' + i + '&parts=' + parts, piece, 'application/octet-stream').then(function () {
+        i++;
+        $('up').style.width = Math.round((i / (parts + 1)) * 100) + '%';
+        $('up-note').textContent = 'Sent ' + Math.round((i / parts) * 100) + '%';
+        return next();
+      });
+    }
+    next().then(function () {
+      sending = false;
+      $('up').style.width = '100%';
+      show('s-done');
+    }).catch(function () {
+      sending = false;
+      var ext = /mp4/.test(blob.type) ? 'm4a' : /ogg/.test(blob.type) ? 'ogg' : 'webm';
+      show('s-review');
+      warn('w-review', 'Your recording could not be sent. Check your internet connection and press <strong>Send my recording</strong> again. Your recording is still here. If it keeps failing, <a href="' + objUrl + '" download="my-voice-recording.' + ext + '">save the recording to this device</a> and email the file instead.');
+    });
+  });
+
+  window.addEventListener('beforeunload', function (e) {
+    if ((recorder && recorder.state === 'recording') || sending || (blob && !$('s-done').classList.contains('on') && $('s-review').classList.contains('on'))) { e.preventDefault(); e.returnValue = ''; }
+  });
+})();
+</script>
+</body>
+</html>

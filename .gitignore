@@ -6,3 +6,8 @@ node_modules/
 
 # Unpublished client book files - never push (site auto-deploys from this repo)
 book-projects/
+.vercel
+.env*.local
+
+# Local screenshots from Claude sessions - not part of the site
+Claude outputs/
