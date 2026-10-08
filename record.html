@@ -78,8 +78,23 @@
     <div class="card">
       <div class="dots" aria-hidden="true"><i id="d1" class="on"></i><i id="d2"></i><i id="d3"></i></div>
 
+      <!-- opening: checking the link -->
+      <section class="step on" id="s-wait">
+        <div class="eyebrow">Audiobook</div>
+        <h1>Record your voice</h1>
+        <p class="note">One moment…</p>
+      </section>
+
+      <!-- link not valid / page closed / no connection -->
+      <section class="step" id="s-locked">
+        <div class="eyebrow">Audiobook</div>
+        <h1 id="locked-title">This link is not complete</h1>
+        <p id="locked-text">This page only opens from the link you were sent. Please open it again from your email, using the whole link.</p>
+        <button class="btn ghost" id="b-reload" type="button" style="display:none">Try again</button>
+      </section>
+
       <!-- Step 1: name + permission -->
-      <section class="step on" id="s-start">
+      <section class="step" id="s-start">
         <div class="eyebrow">Audiobook</div>
         <h1>Record your voice</h1>
         <p>We need about <strong>3 minutes</strong> of you reading aloud. Your recording teaches the computer your voice so it can read the audiobook.</p>
@@ -151,13 +166,16 @@
   'use strict';
   var TARGET = 180, MAX = 300, MIN = 20, CHUNK = 2 * 1024 * 1024;
   var API = '/api/record-upload';
+  var KEY = (new URLSearchParams(location.search).get('k') || '').trim();
+  var KQ = '&k=' + encodeURIComponent(KEY);
   var $ = function (id) { return document.getElementById(id); };
   var stream = null, recorder = null, chunks = [], blob = null, objUrl = null;
   var startedAt = 0, tick = null, durationSec = 0, audioCtx = null, raf = 0, wakeLock = null, sending = false;
 
   function show(step) {
-    ['s-start', 's-ready', 's-rec', 's-review', 's-sending', 's-done'].forEach(function (s) { $(s).classList.toggle('on', s === step); });
-    var n = step === 's-start' ? 1 : (step === 's-ready' || step === 's-rec') ? 2 : 3;
+    ['s-wait', 's-locked', 's-start', 's-ready', 's-rec', 's-review', 's-sending', 's-done'].forEach(function (s) { $(s).classList.toggle('on', s === step); });
+    var n = (step === 's-start' || step === 's-wait' || step === 's-locked') ? 1 : (step === 's-ready' || step === 's-rec') ? 2 : 3;
+    document.querySelector('.dots').style.visibility = step === 's-locked' ? 'hidden' : 'visible';
     $('d1').classList.toggle('on', n >= 1); $('d2').classList.toggle('on', n >= 2); $('d3').classList.toggle('on', n >= 3);
     window.scrollTo(0, 0);
   }
@@ -170,6 +188,29 @@
     var h = Array.prototype.map.call(b, function (x) { return ('0' + x.toString(16)).slice(-2); }).join('');
     return h.slice(0, 8) + '-' + h.slice(8, 12) + '-' + h.slice(12, 16) + '-' + h.slice(16, 20) + '-' + h.slice(20);
   }
+
+  // ---- opening: is this link good and is the page taking recordings? ----
+  function locked(title, text, canRetry) {
+    $('locked-title').textContent = title; $('locked-text').textContent = text;
+    $('b-reload').style.display = canRetry ? 'block' : 'none';
+    show('s-locked');
+  }
+  var CLOSED_TITLE = 'Recording is paused', CLOSED_TEXT = 'This page is not taking new recordings right now. Please let Carl know and try again tomorrow.';
+  var BADLINK_TITLE = 'This link is not complete', BADLINK_TEXT = 'This page only opens from the link you were sent. Please open it again from your email, using the whole link.';
+  function openPage() {
+    if (!KEY) { locked(BADLINK_TITLE, BADLINK_TEXT, false); return; }
+    show('s-wait');
+    fetch(API + '?check=1' + KQ, { method: 'POST' }).then(function (r) {
+      if (r.ok) { show('s-start'); return; }
+      if (r.status === 403) locked(BADLINK_TITLE, BADLINK_TEXT, false);
+      else if (r.status === 429) locked(CLOSED_TITLE, CLOSED_TEXT, false);
+      else locked('Something went wrong', 'The page could not open. Please try again in a minute.', true);
+    }).catch(function () {
+      locked('No connection', 'The page could not connect. Check your internet connection and try again.', true);
+    });
+  }
+  $('b-reload').addEventListener('click', openPage);
+  openPage();
 
   // ---- step 1 ----
   $('b-continue').addEventListener('click', function () {
@@ -301,10 +342,10 @@
   function post(url, body, type, tries) {
     tries = tries || 0;
     return fetch(url, { method: 'POST', headers: { 'Content-Type': type }, body: body })
-      .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(function (r) { if (!r.ok) { var e = new Error('HTTP ' + r.status); e.status = r.status; throw e; } return r.json(); })
       .then(function (j) { if (!j || !j.ok) throw new Error('not ok'); return j; })
       .catch(function (err) {
-        if (tries >= 3) throw err;
+        if (tries >= 3 || err.status === 403 || err.status === 429 || err.status === 400 || err.status === 413) throw err;
         return new Promise(function (res) { setTimeout(res, 1500 * (tries + 1)); }).then(function () { return post(url, body, type, tries + 1); });
       });
   }
@@ -322,13 +363,13 @@
     function next() {
       if (i >= parts) {
         $('up-note').textContent = 'Finishing…';
-        return post(API + '?id=' + id + '&done=1', JSON.stringify({
+        return post(API + '?id=' + id + '&done=1' + KQ, JSON.stringify({
           name: $('name').value.trim(), consent: $('consent').checked === true, consentText: $('consent-text').textContent.trim(),
           mime: blob.type, bytes: blob.size, parts: parts, durationSec: durationSec
         }), 'application/json');
       }
       var piece = blob.slice(i * CHUNK, (i + 1) * CHUNK);
-      return post(API + '?id=' + id + '&part=' + i + '&parts=' + parts, piece, 'application/octet-stream').then(function () {
+      return post(API + '?id=' + id + '&part=' + i + '&parts=' + parts + KQ, piece, 'application/octet-stream').then(function () {
         i++;
         $('up').style.width = Math.round((i / (parts + 1)) * 100) + '%';
         $('up-note').textContent = 'Sent ' + Math.round((i / parts) * 100) + '%';
@@ -339,11 +380,16 @@
       sending = false;
       $('up').style.width = '100%';
       show('s-done');
-    }).catch(function () {
+    }).catch(function (err) {
       sending = false;
       var ext = /mp4/.test(blob.type) ? 'm4a' : /ogg/.test(blob.type) ? 'ogg' : 'webm';
+      var save = '<a href="' + objUrl + '" download="my-voice-recording.' + ext + '">save the recording to this device</a>';
       show('s-review');
-      warn('w-review', 'Your recording could not be sent. Check your internet connection and press <strong>Send my recording</strong> again. Your recording is still here. If it keeps failing, <a href="' + objUrl + '" download="my-voice-recording.' + ext + '">save the recording to this device</a> and email the file instead.');
+      if (err && (err.status === 429 || err.status === 403)) {
+        warn('w-review', 'This page is not taking recordings right now, so yours was not sent. Your recording is still here. Please ' + save + ' and email the file instead.');
+      } else {
+        warn('w-review', 'Your recording could not be sent. Check your internet connection and press <strong>Send my recording</strong> again. Your recording is still here. If it keeps failing, ' + save + ' and email the file instead.');
+      }
     });
   });
 
